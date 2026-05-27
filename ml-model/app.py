@@ -4,21 +4,25 @@ import numpy as np
 
 app = Flask(__name__)
 
-# Load trained model
+# Load model
 model = joblib.load("eco_model.pkl")
 
-@app.route('/predict', methods=['POST'])
 
+@app.route('/predict', methods=['POST'])
 def predict():
 
     try:
 
-        data = request.json
+        data = request.get_json()
 
-        material = int(data['material'])
-        power_usage = int(data['power_usage'])
-        recyclable = int(data['recyclable'])
-        carbon = int(data['carbon_footprint'])
+        # Convert safely to integers
+
+        material = int(data.get('material', 0))
+        power_usage = int(data.get('power_usage', 0))
+        recyclable = int(data.get('recyclable', 0))
+        carbon = int(data.get('carbon_footprint', 0))
+
+        # Create feature array
 
         features = np.array([[
             material,
@@ -26,6 +30,8 @@ def predict():
             recyclable,
             carbon
         ]])
+
+        # Prediction
 
         prediction = model.predict(features)
 
@@ -37,36 +43,35 @@ def predict():
 
         eco_score = 85 if prediction[0] == 1 else 35
 
-        explanation = ""
+        # Explanation
 
         if prediction[0] == 1:
 
             explanation = (
                 "This product is environmentally friendly "
                 "because it uses sustainable materials "
-                "and has lower carbon emissions."
+                "and lower carbon emissions."
             )
 
         else:
 
             explanation = (
-                "This product may negatively affect the "
-                "environment due to higher emissions "
+                "This product may negatively affect "
+                "the environment due to higher emissions "
                 "and non-recyclable materials."
             )
 
         return jsonify({
 
             "prediction": result,
-
             "eco_score": eco_score,
-
             "explanation": explanation
+
         })
 
     except Exception as e:
 
-        print(e)
+        print("ERROR:", e)
 
         return jsonify({
             "error": str(e)

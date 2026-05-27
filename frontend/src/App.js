@@ -1,20 +1,46 @@
 import { useState } from 'react';
+
 import axios from 'axios';
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip
+} from 'recharts';
 
 function App() {
 
-  // STATES
-
   const [material, setMaterial] = useState(0);
+
   const [powerUsage, setPowerUsage] = useState(0);
-  const [recyclable, setRecyclable] = useState(0);
+
+  const [recyclable, setRecyclable] = useState(1);
+
   const [carbonFootprint, setCarbonFootprint] = useState(0);
 
   const [result, setResult] = useState("");
-  const [ecoScore, setEcoScore] = useState("");
+
+  const [ecoScore, setEcoScore] = useState(0);
+
   const [explanation, setExplanation] = useState("");
 
-  // ANALYZE FUNCTION
+  // PIE CHART DATA
+
+  const chartData = [
+
+    {
+      name: "Eco Score",
+      value: Number(ecoScore)
+    },
+
+    {
+      name: "Remaining",
+      value: 100 - Number(ecoScore)
+    }
+  ];
+
+  // BUTTON FUNCTION
 
   const analyzeProduct = async () => {
 
@@ -23,14 +49,14 @@ function App() {
       const response = await axios.post(
         'http://localhost:3001/analyze',
         {
-          material: parseInt(material),
-          power_usage: parseInt(powerUsage),
-          recyclable: parseInt(recyclable),
-          carbon_footprint: parseInt(carbonFootprint)
+          material: Number(material),
+          power_usage: Number(powerUsage),
+          recyclable: Number(recyclable),
+          carbon_footprint: Number(carbonFootprint)
         }
       );
 
-      // SET RESULTS
+      console.log(response.data);
 
       setResult(response.data.prediction);
 
@@ -41,10 +67,10 @@ function App() {
     } catch (error) {
 
       console.log(error);
+
+      alert("Error connecting to backend");
     }
   };
-
-  // UI
 
   return (
 
@@ -54,8 +80,6 @@ function App() {
     }}>
 
       <h1>AI Sustainable Electronics Product Analyzer</h1>
-
-      {/* MATERIAL */}
 
       <h3>Material</h3>
 
@@ -69,8 +93,6 @@ function App() {
 
       </select>
 
-      {/* POWER */}
-
       <h3>Power Usage</h3>
 
       <select onChange={(e) => setPowerUsage(e.target.value)}>
@@ -83,8 +105,6 @@ function App() {
 
       </select>
 
-      {/* RECYCLABLE */}
-
       <h3>Recyclable</h3>
 
       <select onChange={(e) => setRecyclable(e.target.value)}>
@@ -94,8 +114,6 @@ function App() {
         <option value="0">No</option>
 
       </select>
-
-      {/* CARBON */}
 
       <h3>Carbon Footprint</h3>
 
@@ -112,8 +130,6 @@ function App() {
       <br />
       <br />
 
-      {/* BUTTON */}
-
       <button
         onClick={analyzeProduct}
         style={{
@@ -128,13 +144,34 @@ function App() {
       <br />
       <br />
 
-      {/* RESULTS */}
-
       <h2>{result}</h2>
 
       <h2>Eco Score: {ecoScore}%</h2>
 
       <p>{explanation}</p>
+
+      <h2>Eco Score Analysis</h2>
+
+      <PieChart width={400} height={300}>
+
+        <Pie
+          data={chartData}
+          dataKey="value"
+          cx="50%"
+          cy="50%"
+          outerRadius={100}
+          label
+        >
+
+          <Cell fill="#00C49F" />
+
+          <Cell fill="#FF8042" />
+
+        </Pie>
+
+        <Tooltip />
+
+      </PieChart>
 
     </div>
   );
