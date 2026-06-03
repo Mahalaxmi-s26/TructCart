@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Organic Classifier</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;
+  --white:#fff;
+  --border:#e4e0d8;
+  --text:#1c1a16;
+  --muted:#8a8578;
+  --green:#2d6a4f;
+  --green-l:#d8f3dc;
+  --red:#9b2335;
+  --red-l:#fde8eb;
+  --amber:#7a5a00;
+  --amber-l:#fef9e7;
+  --gray-l:#f0ece4;
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+/* card */
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:40px 36px;
+  width:100%;
+  max-width:480px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.07);
+}
+
+/* header */
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0}
+.logo-name{font-family:'DM Serif Display',serif;font-size:18px}
+.card-title{font-family:'DM Serif Display',serif;font-size:28px;line-height:1.2;margin-bottom:6px}
+.card-title em{font-style:italic;color:var(--green)}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+
+/* form */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12px;font-weight:600;letter-spacing:.04em}
+.field input{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:15px;
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  outline:none;
+  transition:border-color .2s;
+}
+.field input:focus{border-color:var(--green)}
+.field input::placeholder{color:#bbb}
+
+.btn{
+  width:100%;
+  background:var(--green);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:13px;
+  font-size:15px;
+  font-weight:600;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:background .2s;
+  margin-top:6px;
+}
+.btn:hover{background:#245a41}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* divider */
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+
+/* result */
+#result{display:none;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:99px;
+  font-size:13px;font-weight:700;margin-bottom:14px;
+}
+.badge-organic  {background:var(--green-l);color:var(--green)}
+.badge-inorganic{background:var(--red-l);color:var(--red)}
+.badge-mixed    {background:var(--amber-l);color:var(--amber)}
+.badge-unknown  {background:var(--gray-l);color:var(--muted)}
+
+.res-product{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px}
+.res-material{font-size:13px;color:var(--muted);margin-bottom:18px}
+
+.detail-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.detail-box{background:var(--bg);border-radius:10px;padding:12px 14px}
+.detail-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:4px}
+.detail-val{font-size:15px;font-weight:600}
+
+.conf-track{height:6px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:8px}
+.conf-fill{height:100%;border-radius:99px;width:0%;transition:width .9s ease}
+
+.desc-box{
+  background:var(--bg);border-radius:10px;
+  padding:14px;font-size:13px;color:var(--muted);line-height:1.65;
+}
+
+/* try again */
+.try-again{
+  width:100%;background:none;border:1px solid var(--border);
+  border-radius:10px;padding:11px;font-size:14px;
+  color:var(--muted);font-family:'DM Sans',sans-serif;
+  cursor:pointer;margin-top:10px;transition:all .2s;
+}
+.try-again:hover{border-color:var(--green);color:var(--green)}
+
+/* spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- header -->
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span class="logo-name">Organic Classifier</span>
+  </div>
+  <div class="card-title">Is it <em>Organic</em><br>or Inorganic?</div>
+  <div class="card-sub">Enter a product name and its material to find out.</div>
+
+  <!-- form -->
+  <div id="formSection">
+    <div class="field">
+      <label>Product Name</label>
+      <input id="f-name" type="text" placeholder="e.g. Bamboo Toothbrush"/>
+    </div>
+    <div class="field">
+      <label>Material <span style="color:var(--green)">★</span></label>
+      <input id="f-material" type="text" placeholder="e.g. Bamboo, Plastic, Cotton…"/>
+    </div>
+    <button class="btn" id="analyzeBtn" onclick="analyze()">Analyze Product →</button>
+  </div>
+
+  <!-- result -->
+  <div id="result">
+    <hr class="divider"/>
+    <div class="badge" id="resBadge"></div>
+    <div class="res-product" id="resProduct"></div>
+    <div class="res-material" id="resMaterial"></div>
+
+    <div class="detail-row">
+      <div class="detail-box">
+        <div class="detail-label">Rule-based</div>
+        <div class="detail-val" id="resRule"></div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">ML Model</div>
+        <div class="detail-val" id="resML"></div>
+      </div>
+      <div class="detail-box" style="grid-column:span 2">
+        <div class="detail-label">ML Confidence — <span id="resConf"></span></div>
+        <div class="conf-track">
+          <div class="conf-fill" id="confFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="desc-box" id="resDesc"></div>
+
+    <button class="try-again" onclick="reset()">← Analyze another product</button>
+  </div>
+
+</div>
+
+<script>
+document.getElementById('f-material').addEventListener('keydown', e => { if(e.key==='Enter') analyze(); });
+document.getElementById('f-name').addEventListener('keydown',     e => { if(e.key==='Enter') analyze(); });
+
+async function analyze(){
+  const name     = document.getElementById('f-name').value.trim();
+  const material = document.getElementById('f-material').value.trim();
+  if(!name && !material){ alert('Please enter at least a product name or material.'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Analyzing…';
+
+  try{
+    const res = await fetch('/api/classify',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({product:name, material, category:''})
+    });
+    const d = await res.json();
+    showResult(d, name, material);
+  } catch {
+    alert('Could not reach server. Make sure app.py is running.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyze Product →';
+  }
+}
+
+function showResult(d, name, material){
+  // hide form, show result
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+
+  const cls = d.classification;
+
+  const map = {
+    Organic:   { cls:'badge-organic',   icon:'🌿', label:'Organic'   },
+    Inorganic: { cls:'badge-inorganic', icon:'⚗️', label:'Inorganic' },
+    Mixed:     { cls:'badge-mixed',     icon:'🔀', label:'Mixed'     },
+    Unknown:   { cls:'badge-unknown',   icon:'❓', label:'Unknown'   },
+  };
+  const m = map[cls] || map.Unknown;
+
+  const badge = document.getElementById('resBadge');
+  badge.className = 'badge ' + m.cls;
+  badge.textContent = m.icon + '  ' + m.label;
+
+  document.getElementById('resProduct').textContent  = name     || '(no name given)';
+  document.getElementById('resMaterial').textContent = 'Material: ' + (material || 'not specified');
+  document.getElementById('resRule').textContent     = d.rule_label;
+  document.getElementById('resML').textContent       = d.ml_label;
+  document.getElementById('resConf').textContent     = d.confidence + '%';
+
+  const colorMap = { Organic:var_('--green'), Inorganic:var_('--red'), Mixed:var_('--amber') };
+  const fill = document.getElementById('confFill');
+  fill.style.background = colorMap[cls] || '#aaa';
+  setTimeout(() => { fill.style.width = d.confidence + '%'; }, 80);
+
+  const desc = {
+    Organic:   '🌱 This product is made from natural, plant-based, or biodegradable materials. It is generally eco-friendly and sustainable.',
+    Inorganic: '🏭 This product is made from synthetic, metallic, or chemical materials. It may have a higher environmental footprint.',
+    Mixed:     '🔀 This product contains both organic and inorganic materials. Sustainability varies depending on the specific composition.',
+    Unknown:   '❓ Not enough material information to classify confidently. Try entering the material (e.g. Plastic, Cotton, Bamboo).',
+  };
+  document.getElementById('resDesc').textContent = desc[cls] || desc.Unknown;
+}
+
+function reset(){
+  document.getElementById('formSection').style.display = 'block';
+  document.getElementById('result').style.display      = 'none';
+  document.getElementById('f-name').value     = '';
+  document.getElementById('f-material').value = '';
+  document.getElementById('f-name').focus();
+}
+
+function var_(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+</script>
+</body>
+</html>
