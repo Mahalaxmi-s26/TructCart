@@ -75,7 +75,7 @@ def classify_by_material(material: str) -> str:
 
 # ─── Load & prepare dataset ───────────────────────────────────────────────────
 
-def load_dataset(path="D:\MCA 2nd sem\organic_classifier\merged_products_final.xlsx"):
+def load_dataset(path="merged_products_final.xlsx"):
     df = pd.read_excel(path)
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     df["material"]     = df["material"].fillna("Unknown")
