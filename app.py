@@ -241,10 +241,12 @@ def run():
     port = 5055
     threading.Timer(1.2, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     print(f"\n🌐  Open http://localhost:{port}\n    Ctrl+C to stop.\n")
-    return app
+    app.run(port=port, debug=False)
 
-
-app = run()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)), debug=False)
+    try:
+        import flask
+    except ImportError:
+        os.system("pip install flask")
+    run()
