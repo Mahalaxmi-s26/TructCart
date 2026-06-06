@@ -162,14 +162,8 @@ def run():
     print("Loading dataset…")
     df, counts, mat_counts = load_dataset()
 
-    MODEL_PATH = "models/classifier.pkl"
-    if os.path.exists(MODEL_PATH):
-        print("Loading saved model…")
-        clf = Classifier.load(MODEL_PATH)
-    else:
-        clf = Classifier()
-        clf.train(df)
-        clf.save(MODEL_PATH)
+    clf = Classifier()
+    clf.train(df)
 
     # Pre-build summary stats for the dashboard
     category_breakdown = (
