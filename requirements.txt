@@ -1,6 +1,7 @@
-flask>=2.0
-pandas>=1.5
-openpyxl>=3.0
-scikit-learn>=1.2
-joblib>=1.2
-numpy>=1.23
+flask
+gunicorn
+pandas
+openpyxl
+scikit-learn
+joblib
+numpy
