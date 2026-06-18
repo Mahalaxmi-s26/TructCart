@@ -18,7 +18,7 @@ import joblib
 # ─── Material classification rules ────────────────────────────────────────────
 
 ORGANIC_MATERIALS = {
-    "natural fiber", "cotton", "cotton/fabric", "beeswax", "bamboo", "wood",
+   "beeswax", "bamboo", "wood",
     "biodegradable", "hemp", "jute", "linen", "wool", "cork", "paper",
     "charcoal", "plant", "organic", "cellulose", "coconut", "compostable",
     "botanical", "herbal", "seed", "vegetable", "fruit", "grain", "clay",
