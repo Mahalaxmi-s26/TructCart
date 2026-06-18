@@ -202,15 +202,21 @@ def run():
 
     @app.route("/api/classify", methods=["POST"])
     def classify():
-        data     = request.get_json()
-        name     = data.get("product", "").strip()
-        material = data.get("material", "").strip()
-        category = data.get("category", "").strip()
-        if not name and not material:
-            return jsonify({"error": "Provide at least a product name or material"}), 400
-        result = clf.predict(name, material, category)
-        return jsonify(result)
+        data = request.get_json(silent=True) or {}
+        print(f"Received request: {data}")
 
+        name = str(data.get("product", "")).strip()
+        material = str(data.get("material", "")).strip()
+
+        # Validate required fields
+        if not name:
+            return jsonify({"error": "Product name is required"}), 400
+
+        if not material:
+            return jsonify({"error": "Material is required"}), 400
+
+        result = clf.predict(name, material)
+        return jsonify(result)
     @app.route("/api/products")
     def products():
         q    = request.args.get("q","").lower()
