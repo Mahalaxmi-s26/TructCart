@@ -251,7 +251,7 @@ function showResult(d, name, material){
     Organic:   '🌱 This product is made from natural, plant-based, or biodegradable materials. It is generally eco-friendly and sustainable.',
     Inorganic: '🏭 This product is made from synthetic, metallic, or chemical materials. It may have a higher environmental footprint.',
     Mixed:     '🔀 This product contains both organic and inorganic materials. Sustainability varies depending on the specific composition.',
-    Unknown:   '❓ Not enough material information to classify confidently. Try entering the material (e.g. Plastic, Cotton, Bamboo).',
+    Unknown:   '❓ Not enough material information to classify confidently. Try entering the material (e.g. Plastic, Cotton, Bamboo) or name .',
   };
   document.getElementById('resDesc').textContent = desc[cls] || desc.Unknown;
 }
