@@ -75,7 +75,29 @@ def classify_by_material(material: str) -> str:
 
 # ─── Load & prepare dataset ───────────────────────────────────────────────────
 
-def load_dataset(path="merged_products_final.xlsx"):
+def load_dataset(path=None):
+    """
+    Load dataset from Excel file.
+    If path not provided, looks for 'merged_products_final.xlsx' in current directory.
+    """
+    # Use provided path, or default to looking in the same directory as this script
+    if path is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(script_dir, "merged_products_final.xlsx")
+    
+    # Try alternative paths if not found
+    if not os.path.exists(path):
+        alt_path = "merged_products_final.xlsx"
+        if os.path.exists(alt_path):
+            path = alt_path
+        else:
+            raise FileNotFoundError(
+                f"Cannot find 'merged_products_final.xlsx'.\n"
+                f"Tried: {path}\n{alt_path}\n"
+                f"Make sure the file is in the same directory as app.py"
+            )
+    
+    print(f"Loading dataset from: {path}")
     df = pd.read_excel(path)
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     df["material"]     = df["material"].fillna("Unknown")
@@ -102,7 +124,7 @@ class Classifier:
     def train(self, df):
         print("Training ML classifier…")
         known = df[df["classification"] != "Unknown"].copy()
-        X = known["product_name"] + " " + known["material"] + " " + known["category"]
+        X = known["product_name"] + " " + known["material"]
         y = self.le.fit_transform(known["classification"])
 
         self.pipeline = Pipeline([
@@ -114,7 +136,7 @@ class Classifier:
         self.accuracy = round(cv.mean() * 100, 1)
         print(f"  ✅ Accuracy: {self.accuracy}%")
 
-    def predict(self, product_name: str, material: str = "", category: str = "") -> dict:
+    def predict(self, product_name: str, material: str = "") -> dict:
         # Rule-based from material — always takes priority
         rule = classify_by_material(material) if material else "Unknown"
 
@@ -122,7 +144,7 @@ class Classifier:
         name_rule = classify_by_material(product_name) if rule == "Unknown" else "Unknown"
 
         # ML prediction
-        text = f"{product_name} {material} {category}"
+        text = f"{product_name} {material}"
         proba = self.pipeline.predict_proba([text])[0]
         pred_idx = int(np.argmax(proba))
         ml_label = self.le.inverse_transform([pred_idx])[0]
@@ -162,8 +184,14 @@ def run():
     print("Loading dataset…")
     df, counts, mat_counts = load_dataset()
 
-    clf = Classifier()
-    clf.train(df)
+    MODEL_PATH = "models/classifier.pkl"
+    if os.path.exists(MODEL_PATH):
+        print("Loading saved model…")
+        clf = Classifier.load(MODEL_PATH)
+    else:
+        clf = Classifier()
+        clf.train(df)
+        clf.save(MODEL_PATH)
 
     # Pre-build summary stats for the dashboard
     category_breakdown = (
@@ -217,6 +245,7 @@ def run():
 
         result = clf.predict(name, material)
         return jsonify(result)
+
     @app.route("/api/products")
     def products():
         q    = request.args.get("q","").lower()
@@ -241,10 +270,12 @@ def run():
     port = 5055
     threading.Timer(1.2, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     print(f"\n🌐  Open http://localhost:{port}\n    Ctrl+C to stop.\n")
-    return app
+    app.run(port=port, debug=False)
 
-
-app = run()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    try:
+        import flask
+    except ImportError:
+        os.system("pip install flask")
+    run()

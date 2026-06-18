@@ -69,6 +69,22 @@ body{
 .field input:focus{border-color:var(--green)}
 .field input::placeholder{color:#bbb}
 
+.error-message{
+  color:var(--red);
+  font-size:12px;
+  margin-top:4px;
+  display:none;
+}
+
+.field.error input{
+  border-color:var(--red);
+  background:var(--red-l);
+}
+
+.field.error .error-message{
+  display:block;
+}
+
 .btn{
   width:100%;
   background:var(--green);
@@ -147,13 +163,15 @@ body{
 
   <!-- form -->
   <div id="formSection">
-    <div class="field">
-      <label>Product Name</label>
+    <div class="field" id="nameField">
+      <label>Product Name <span style="color:var(--green)">★</span></label>
       <input id="f-name" type="text" placeholder="e.g. Bamboo Toothbrush"/>
+      <div class="error-message">Product name is required</div>
     </div>
-    <div class="field">
+    <div class="field" id="materialField">
       <label>Material <span style="color:var(--green)">★</span></label>
       <input id="f-material" type="text" placeholder="e.g. Bamboo, Plastic, Cotton…"/>
+      <div class="error-message">Material is required</div>
     </div>
     <button class="btn" id="analyzeBtn" onclick="analyze()">Analyze Product →</button>
   </div>
@@ -193,10 +211,35 @@ body{
 document.getElementById('f-material').addEventListener('keydown', e => { if(e.key==='Enter') analyze(); });
 document.getElementById('f-name').addEventListener('keydown',     e => { if(e.key==='Enter') analyze(); });
 
+// Clear error styling when user starts typing
+document.getElementById('f-name').addEventListener('input', function() {
+  document.getElementById('nameField').classList.remove('error');
+});
+
+document.getElementById('f-material').addEventListener('input', function() {
+  document.getElementById('materialField').classList.remove('error');
+});
+
 async function analyze(){
   const name     = document.getElementById('f-name').value.trim();
   const material = document.getElementById('f-material').value.trim();
-  if(!name && !material){ alert('Please enter at least a product name or material.'); return; }
+  
+  let hasError = false;
+  
+  // Validate product name
+  if(!name){ 
+    document.getElementById('nameField').classList.add('error');
+    hasError = true;
+  }
+  
+  // Validate material
+  if(!material){ 
+    document.getElementById('materialField').classList.add('error');
+    hasError = true;
+  }
+  
+  // If either field is empty, stop here
+  if(hasError) return;
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
@@ -205,15 +248,22 @@ async function analyze(){
   try{
     const res = await fetch('/api/classify',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({product:name, material, category:''})
+      body: JSON.stringify({product:name, material:material})
     });
     const d = await res.json();
+    
+    if(!res.ok) {
+      alert('Error: ' + (d.error || 'Unknown error'));
+      btn.disabled = false;
+      btn.innerHTML = 'Analyze Product →';
+      return;
+    }
+    
     showResult(d, name, material);
   } catch {
     alert('Could not reach server. Make sure app.py is running.');
-  } finally {
     btn.disabled = false;
-    btn.textContent = 'Analyze Product →';
+    btn.innerHTML = 'Analyze Product →';
   }
 }
 
@@ -259,8 +309,16 @@ function showResult(d, name, material){
 function reset(){
   document.getElementById('formSection').style.display = 'block';
   document.getElementById('result').style.display      = 'none';
+  document.getElementById('nameField').classList.remove('error');
+  document.getElementById('materialField').classList.remove('error');
   document.getElementById('f-name').value     = '';
   document.getElementById('f-material').value = '';
+  
+  // Reset button state
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = false;
+  btn.innerHTML = 'Analyze Product →';
+  
   document.getElementById('f-name').focus();
 }
 
